@@ -1,42 +1,29 @@
 import pygame
 import random
 
-# Import colors from main or define them locally for checking
 RED = (255, 65, 54)
 GREEN = (46, 204, 64)
 BLUE = (0, 116, 217)
 
 def iddfs_visualizer(draw_func, grid, start, end):
-    # IDDFS tries depth 0, then 1, then 2, etc.
-    # We cap it at 50 to prevent infinite loops if unreachable
     max_depth = 50 
     
     for depth_limit in range(max_depth):
-        
-        # 1. VISUAL RESET
-        # We must clear the "Visited" and "Frontier" nodes from the previous
-        # shallow iteration to show that a NEW, deeper search is starting.
-        # We do NOT clear walls.
         reset_search_colors(grid)
         
-        # 2. Run DLS with the new limit
-        # If it returns True, we found the target!
         if dls_with_limit(draw_func, grid, start, end, depth_limit):
             return True
             
     return False
 
 def reset_search_colors(grid):
-    """Clears Red/Green/Blue colors but keeps Walls, Start, and End."""
     for row in grid:
         for node in row:
-            # Check if color is Visited(Red), Frontier(Green), or Path(Blue)
             if node.color in {RED, GREEN, BLUE}:
-                node.reset() # Turn back to White
+                node.reset() 
                 node.parent = None
 
 def dls_with_limit(draw_func, grid, start, end, limit):
-    """Standard DLS but returns True/False immediately."""
     stack = [(start, 0)]
     visited = set()
     
@@ -53,12 +40,11 @@ def dls_with_limit(draw_func, grid, start, end, limit):
                 pygame.quit()
                 return False
 
-        current, depth = stack.pop() # LIFO
+        current, depth = stack.pop() 
 
         if current == end:
             return True
 
-        # --- Dynamic Obstacles ---
         loop_count += 1
         if loop_count % 15 == 0:
             if random.random() < 0.01:
@@ -67,16 +53,14 @@ def dls_with_limit(draw_func, grid, start, end, limit):
         if current.is_wall():
             continue
 
-        # --- Limit Check ---
         if depth >= limit:
             continue
             
         visited.add(current)
         
         if current != start:
-            current.make_closed() # Red
+            current.make_closed() 
             
-        # Neighbors
         row, col = current.row, current.col
         rows = len(grid)
         
@@ -86,8 +70,7 @@ def dls_with_limit(draw_func, grid, start, end, limit):
                  neighbor = grid[r][c]
                  if not neighbor.is_wall() and neighbor not in visited:
                      neighbor.parent = current
-                     neighbor.make_open() # Green
-                     # Add to stack with Depth + 1
+                     neighbor.make_open() 
                      stack.append((neighbor, depth + 1))
         
         draw_func()
