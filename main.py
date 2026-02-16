@@ -6,6 +6,7 @@ from bfs import bfs_visualizer
 from ucs import ucs_visualizer
 from dls import dls_visualizer
 from iddfs import iddfs_visualizer
+from bds import bidirectional_visualizer
 
 # --- CONFIGURATION ---
 WIDTH = 600
@@ -252,6 +253,11 @@ def main(win, width):
                     reset_weights(grid) # Clear any weights
                     current_algo = iddfs_visualizer
                     algo_name = "IDDFS"
+                # 6. BDS (Bidirectional Search)
+                elif event.key == pygame.K_6:
+                    reset_weights(grid) # Clear any weights
+                    current_algo = bidirectional_visualizer
+                    algo_name = "Bidirectional Search"
                 
                 # Start Search
                 if event.key == pygame.K_SPACE and start and end and current_algo:
@@ -261,7 +267,8 @@ def main(win, width):
                     found = current_algo(update_display, grid, start, end)
                     
                     if found:
-                        reconstruct_path(end, update_display)
+                        if current_algo != bidirectional_visualizer:
+                            reconstruct_path(end, update_display)
                         status_text = "Success! Path Found."
                     else:
                         status_text = "Failed. No Path."
