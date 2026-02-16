@@ -2,8 +2,8 @@ import pygame
 import random
 # Import algorithms
 from dfs import dfs_visualizer 
-# from bfs import bfs_visualizer
-# You can add imports for ucs, dls, iddfs, bidirectional later
+from bfs import bfs_visualizer
+from ucs import ucs_visualizer  # <--- Added UCS Import
 
 # --- CONFIGURATION ---
 WIDTH = 600
@@ -12,7 +12,6 @@ ROWS = 20
 
 # --- FONTS (Professional Look) ---
 pygame.font.init()
-# Arial is standard and clean. 'bold=True' makes headers pop.
 STAT_FONT = pygame.font.SysFont('arial', 24, bold=True)       # For "Algo: BFS"
 LEGEND_FONT = pygame.font.SysFont('arial', 14)                # For small text
 TITLE_FONT = pygame.font.SysFont('arial', 18, bold=True)      # For section headers
@@ -40,20 +39,32 @@ class Node:
         self.color = WHITE
         self.width = width
         self.parent = None 
+        self.weight = 1  # <--- NEW: Default weight
 
     def get_pos(self): return self.row, self.col
     def is_wall(self): return self.color == BLACK
     def reset(self): 
         self.color = WHITE
         self.parent = None
+        self.weight = 1  # <--- NEW: Reset weight
+        
     def make_start(self): self.color = TURQUOISE
     def make_wall(self): self.color = BLACK
     def make_end(self): self.color = YELLOW
     def make_closed(self): self.color = RED
     def make_open(self): self.color = GREEN
     def make_path(self): self.color = BLUE
+    
     def draw(self, win):
         pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.width))
+        
+        # <--- NEW: Draw Weight Text if it's not 1
+        if self.weight > 1 and not self.is_wall():
+            weight_font = pygame.font.SysFont('arial', 12) 
+            text = weight_font.render(str(self.weight), True, BLACK)
+            # Center the number
+            win.blit(text, (self.x + self.width/2 - text.get_width()/2, 
+                            self.y + self.width/2 - text.get_height()/2))
 
 def make_grid(rows, width):
     grid = []
@@ -76,17 +87,13 @@ def draw_ui(win, width, status_text, algo_name="None"):
     # 1. Background & Border (Clean Light Grey)
     ui_bg_color = (235, 235, 235) 
     pygame.draw.rect(win, ui_bg_color, (0, width, width, 100))
-    pygame.draw.line(win, (50, 50, 50), (0, width), (width, width), 2) # Darker border
+    pygame.draw.line(win, (50, 50, 50), (0, width), (width, width), 2) 
 
-    # --- COLUMN 1: STATUS (Left, wider space) ---
-    # Moved divider from x=240 to x=280 to prevent overlap
-    
-    # Algorithm Name
-    algo_surface = STAT_FONT.render(f"Algo: {algo_name}", True, (0, 50, 150)) # Dark Blue
+    # --- COLUMN 1: STATUS ---
+    algo_surface = STAT_FONT.render(f"Algo: {algo_name}", True, (0, 50, 150)) 
     win.blit(algo_surface, (15, width + 15))
 
-    # Status Text (Text wrapping safety)
-    if len(status_text) > 30: # If text is too long, shrink it slightly
+    if len(status_text) > 30: 
         small_stat_font = pygame.font.SysFont('arial', 12)
         status_surface = small_stat_font.render(f"Status: {status_text}", True, BLACK)
     else:
@@ -94,14 +101,12 @@ def draw_ui(win, width, status_text, algo_name="None"):
         
     win.blit(status_surface, (15, width + 50))
 
-    # --- COLUMN 2: CONTROLS (Middle) ---
-    pygame.draw.line(win, (180, 180, 180), (280, width + 10), (280, width + 90), 2) # Divider
+    # --- COLUMN 2: CONTROLS ---
+    pygame.draw.line(win, (180, 180, 180), (280, width + 10), (280, width + 90), 2) 
     
-    # Headers
     ctrl_title = TITLE_FONT.render("Controls", True, (50, 50, 50))
     win.blit(ctrl_title, (295, width + 15))
     
-    # Instructions
     c1 = LEGEND_FONT.render("1-6: Choose Algo", True, BLACK)
     c2 = LEGEND_FONT.render("Space: Start", True, BLACK)
     c3 = LEGEND_FONT.render("C: Clear Board", True, BLACK)
@@ -110,24 +115,20 @@ def draw_ui(win, width, status_text, algo_name="None"):
     win.blit(c2, (295, width + 58))
     win.blit(c3, (295, width + 76))
 
-    # --- COLUMN 3: LEGEND (Right) ---
-    pygame.draw.line(win, (180, 180, 180), (450, width + 10), (450, width + 90), 2) # Divider
+    # --- COLUMN 3: LEGEND ---
+    pygame.draw.line(win, (180, 180, 180), (450, width + 10), (450, width + 90), 2) 
 
     def draw_legend_item(color, text, x, y):
-        # Draw box with thin black outline
         pygame.draw.rect(win, color, (x, y, 12, 12)) 
         pygame.draw.rect(win, BLACK, (x, y, 12, 12), 1)
-        # Text
         label = pygame.font.SysFont('arial', 11).render(text, True, (30,30,30))
         win.blit(label, (x + 18, y - 2))
 
-    # Column A (Start, Open, Path)
     base_x = 460
     draw_legend_item(TURQUOISE, "Start", base_x, width + 20)
     draw_legend_item(GREEN, "Frontier", base_x, width + 45)
     draw_legend_item(BLUE, "Path", base_x, width + 70)
 
-    # Column B (Target, Closed, Wall)
     base_x2 = 530
     draw_legend_item(YELLOW, "Target", base_x2, width + 20)
     draw_legend_item(RED, "Visited", base_x2, width + 45)
@@ -165,6 +166,18 @@ def clear_search(grid):
                 node.reset()
             node.parent = None
 
+# --- NEW HELPERS FOR UCS WEIGHTS ---
+def generate_random_weights(grid):
+    for row in grid:
+        for node in row:
+            if node.color == WHITE: # Only empty nodes get weights
+                node.weight = random.randint(1, 9)
+
+def reset_weights(grid):
+    for row in grid:
+        for node in row:
+            node.weight = 1
+
 # --- MAIN LOOP ---
 def main(win, width):
     grid = make_grid(ROWS, width)
@@ -172,7 +185,6 @@ def main(win, width):
     end = None
     run = True
     
-    # Algorithm Selection State
     current_algo = None
     algo_name = "Select (1-6)"
     status_text = "Setup: Click nodes -> Select Algo -> Space"
@@ -210,15 +222,23 @@ def main(win, width):
 
             # --- KEYBOARD HANDLING ---
             if event.type == pygame.KEYDOWN:
-                # Algorithm Selection
+                # 1. BFS (Standard)
                 if event.key == pygame.K_1:
+                    reset_weights(grid) # Clear any weights
                     current_algo = bfs_visualizer
                     algo_name = "BFS"
+                
+                # 2. DFS (Standard)
                 elif event.key == pygame.K_2:
+                    reset_weights(grid) # Clear any weights
                     current_algo = dfs_visualizer
                     algo_name = "DFS"
-                # Add others here later:
-                # elif event.key == pygame.K_3: current_algo = ucs_visualizer; algo_name = "UCS"
+
+                # 3. UCS (Weighted!)
+                elif event.key == pygame.K_3:
+                    generate_random_weights(grid) # <--- Generate Random Weights
+                    current_algo = ucs_visualizer
+                    algo_name = "UCS (Weighted)"
                 
                 # Start Search
                 if event.key == pygame.K_SPACE and start and end and current_algo:
