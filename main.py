@@ -5,6 +5,7 @@ from dfs import dfs_visualizer
 from bfs import bfs_visualizer
 from ucs import ucs_visualizer
 from dls import dls_visualizer
+from iddfs import iddfs_visualizer
 
 # --- CONFIGURATION ---
 WIDTH = 600
@@ -245,7 +246,12 @@ def main(win, width):
                 elif event.key == pygame.K_4:
                     reset_weights(grid) # Clear any weights
                     current_algo = dls_visualizer
-                    algo_name = "DLS (Depth-Limited)"
+                    algo_name = "DLS"
+                # 5. IDDFS (Iterative Deepening)
+                elif event.key == pygame.K_5:
+                    reset_weights(grid) # Clear any weights
+                    current_algo = iddfs_visualizer
+                    algo_name = "IDDFS"
                 
                 # Start Search
                 if event.key == pygame.K_SPACE and start and end and current_algo:
