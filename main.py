@@ -3,7 +3,8 @@ import random
 # Import algorithms
 from dfs import dfs_visualizer 
 from bfs import bfs_visualizer
-from ucs import ucs_visualizer  # <--- Added UCS Import
+from ucs import ucs_visualizer
+from dls import dls_visualizer
 
 # --- CONFIGURATION ---
 WIDTH = 600
@@ -239,6 +240,12 @@ def main(win, width):
                     generate_random_weights(grid) # <--- Generate Random Weights
                     current_algo = ucs_visualizer
                     algo_name = "UCS (Weighted)"
+
+                # 4. DLS (Depth-Limited Search)
+                elif event.key == pygame.K_4:
+                    reset_weights(grid) # Clear any weights
+                    current_algo = dls_visualizer
+                    algo_name = "DLS (Depth-Limited)"
                 
                 # Start Search
                 if event.key == pygame.K_SPACE and start and end and current_algo:
