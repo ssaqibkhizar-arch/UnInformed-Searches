@@ -14,8 +14,6 @@ def bidirectionalVisualizer(drawFunc, grid, start, end):
     startParents = {start: None}
     endParents = {end: None}
     
-    # We rely on node.neighbors which is pre-filled in main.py 
-    # with the specific 6-direction movement rules.
 
     while startQ and endQ:
         for event in pygame.event.get():

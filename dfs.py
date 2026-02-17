@@ -10,7 +10,6 @@ def dfsVisualizer(drawFunc, grid, start, end):
                 pygame.quit()
                 return False
 
-        # DFS uses a stack (LIFO)
         current = stack.pop()
 
         if current == end:
@@ -18,9 +17,7 @@ def dfsVisualizer(drawFunc, grid, start, end):
 
         if current != start:
             current.makeClosed()
-        
-        # Using neighbors pre-calculated in main.py:
-        # Up, Right, Bottom, Bottom-Right, Left, Top-Left
+
         for neighbor in current.neighbors:
             if not neighbor.isWall() and neighbor not in visited:
                 visited.add(neighbor)

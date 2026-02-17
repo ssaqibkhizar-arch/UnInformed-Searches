@@ -1,7 +1,6 @@
 import pygame
 import random
 
-# Updated imports to match the refactored camelCase function names
 from dfs import dfsVisualizer
 from bfs import bfsVisualizer
 from ucs import ucsVisualizer
@@ -157,7 +156,6 @@ def drawUI(win, width, statusText, algoName="None"):
     baseX2 = 530
     drawLegendItem(YELLOW, "Target", baseX2, width + 20)
     drawLegendItem(RED, "Visited", baseX2, width + 45)
-    # Wall legend item removed from here
 
 def draw(win, grid, rows, width, status, algoName):
     win.fill(WHITE)
@@ -224,7 +222,6 @@ def main(win, width):
                 if pos[1] < width:
                     row, col = getClickedPos(pos, ROWS, width)
                     node = grid[row][col]
-                    # Logic only allows Start and End; Wall logic removed
                     if not start and node != end:
                         start = node
                         start.makeStart()

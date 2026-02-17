@@ -10,7 +10,6 @@ def iddfsVisualizer(drawFunc, grid, start, end):
     for depthLimit in range(maxDepth):
         resetSearchColors(grid)
         
-        # We pass the pre-calculated neighbors to ensure 6-direction movement
         if dlsWithLimit(drawFunc, grid, start, end, depthLimit):
             return True
             
@@ -24,7 +23,6 @@ def resetSearchColors(grid):
                 node.parent = None
 
 def dlsWithLimit(drawFunc, grid, start, end, limit):
-    # Stack stores tuples of (Node, CurrentDepth)
     stack = [(start, 0)]
     visited = set()
 
@@ -50,7 +48,6 @@ def dlsWithLimit(drawFunc, grid, start, end, limit):
         if current != start:
             current.makeClosed() 
             
-        # Using the neighbors defined in main.py (Up, Right, Bottom, Bottom-Right, Left, Top-Left)
         for neighbor in current.neighbors:
             if neighbor not in visited and not neighbor.isWall():
                 neighbor.parent = current

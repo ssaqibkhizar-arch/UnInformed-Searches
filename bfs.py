@@ -22,8 +22,6 @@ def bfsVisualizer(drawFunc, grid, start, end):
         if current != start:
             current.makeClosed() 
 
-        # Using the neighbors list pre-populated in main.py
-        # This list strictly contains: Up, Right, Bottom, Bottom-Right, Left, Top-Left
         for neighbor in current.neighbors:
             if not neighbor.isWall() and neighbor not in visited:
                 visited.add(neighbor)
