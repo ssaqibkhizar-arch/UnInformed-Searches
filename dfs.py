@@ -1,6 +1,6 @@
 import pygame
 
-def dfs_visualizer(draw_func, grid, start, end):
+def dfsVisualizer(drawFunc, grid, start, end):
     stack = [start]
     visited = {start}
     
@@ -10,29 +10,26 @@ def dfs_visualizer(draw_func, grid, start, end):
                 pygame.quit()
                 return False
 
+        # DFS uses a stack (LIFO)
         current = stack.pop()
 
         if current == end:
             return True 
 
         if current != start:
-            current.make_closed()
-
-        row, col = current.row, current.col
-        rows = len(grid)
+            current.makeClosed()
         
-        moves = [(0, -1), (1, 0), (0, 1), (-1, 0)] 
-        
-        for dr, dc in moves:
-            r, c = row + dr, col + dc
-            if 0 <= r < rows and 0 <= c < rows:
-                neighbor = grid[r][c]
-                if not neighbor.is_wall() and neighbor not in visited:
-                    visited.add(neighbor)
-                    neighbor.parent = current 
-                    stack.append(neighbor)
-                    neighbor.make_open()
+        # Using neighbors pre-calculated in main.py:
+        # Up, Right, Bottom, Bottom-Right, Left, Top-Left
+        for neighbor in current.neighbors:
+            if not neighbor.isWall() and neighbor not in visited:
+                visited.add(neighbor)
+                neighbor.parent = current 
+                stack.append(neighbor)
+                
+                if neighbor != end:
+                    neighbor.makeOpen()
 
-        draw_func()
+        drawFunc()
 
     return False

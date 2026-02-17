@@ -1,6 +1,5 @@
 import pygame
 import collections
-import random
 
 RED = (255, 65, 54)      
 GREEN = (46, 204, 64)    
@@ -8,90 +7,73 @@ PURPLE = (177, 13, 201)
 ORANGE = (255, 165, 0)   
 BLUE = (0, 116, 217)     
 
-def bidirectional_visualizer(draw_func, grid, start, end):
-    start_q = collections.deque([start])
-    end_q = collections.deque([end])
+def bidirectionalVisualizer(drawFunc, grid, start, end):
+    startQ = collections.deque([start])
+    endQ = collections.deque([end])
     
-    start_parents = {start: None}
-    end_parents = {end: None}
+    startParents = {start: None}
+    endParents = {end: None}
     
-    directions = [
-        (0, -1), (1, 0), (0, 1), (1, 1), 
-        (-1, 0), (-1, -1), (1, -1), (-1, 1)
-    ]
-    
-    loop_count = 0
+    # We rely on node.neighbors which is pre-filled in main.py 
+    # with the specific 6-direction movement rules.
 
-    while start_q and end_q:
+    while startQ and endQ:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return False
 
-        loop_count += 1
-        if loop_count % 12 == 0:
-            if random.random() < 0.02:
-                spawn_dynamic_obstacle(grid, start, end)
+        # --- Forward Search (Start -> End) ---
+        if startQ:
+            current = startQ.popleft()
 
-        if start_q:
-            current = start_q.popleft()
-
-            if current in end_parents:
-                join_paths(current, start_parents, end_parents, draw_func)
+            # Check if paths met
+            if current in endParents:
+                joinPaths(current, startParents, endParents, drawFunc)
                 return True 
 
             if current != start:
-                current.make_closed() 
+                current.makeClosed() 
             
-            for dr, dc in directions:
-                r, c = current.row + dr, current.col + dc
-                if 0 <= r < len(grid) and 0 <= c < len(grid):
-                    neighbor = grid[r][c]
-                    if not neighbor.is_wall() and neighbor not in start_parents:
-                        start_parents[neighbor] = current
-                        start_q.append(neighbor)
-                        neighbor.make_open() 
+            for neighbor in current.neighbors:
+                if neighbor not in startParents and not neighbor.isWall():
+                    startParents[neighbor] = current
+                    startQ.append(neighbor)
+                    neighbor.makeOpen() 
 
-        if end_q:
-            current_b = end_q.popleft()
+        # --- Backward Search (End -> Start) ---
+        if endQ:
+            currentB = endQ.popleft()
 
-            if current_b in start_parents:
-                join_paths(current_b, start_parents, end_parents, draw_func)
+            # Check if paths met
+            if currentB in startParents:
+                joinPaths(currentB, startParents, endParents, drawFunc)
                 return True 
 
-            if current_b != end:
-                current_b.color = PURPLE 
+            if currentB != end:
+                currentB.color = PURPLE 
             
-            for dr, dc in directions:
-                r, c = current_b.row + dr, current_b.col + dc
-                if 0 <= r < len(grid) and 0 <= c < len(grid):
-                    neighbor = grid[r][c]
-                    if not neighbor.is_wall() and neighbor not in end_parents:
-                        end_parents[neighbor] = current_b
-                        end_q.append(neighbor)
-                        neighbor.color = ORANGE
+            for neighbor in currentB.neighbors:
+                if neighbor not in endParents and not neighbor.isWall():
+                    endParents[neighbor] = currentB
+                    endQ.append(neighbor)
+                    neighbor.color = ORANGE
 
-        draw_func()
+        drawFunc()
 
     return False
 
-def join_paths(meet_node, start_parents, end_parents, draw_func):
-    curr = meet_node
+def joinPaths(meetNode, startParents, endParents, drawFunc):
+    # Trace back to Start
+    curr = meetNode
     while curr:
-        curr.make_path()
-        curr = start_parents.get(curr)
-        draw_func()
+        curr.makePath()
+        curr = startParents.get(curr)
+        drawFunc()
         
-    curr = meet_node
+    # Trace back to End
+    curr = meetNode
     while curr:
-        curr.make_path()
-        curr = end_parents.get(curr)
-        draw_func()
-
-def spawn_dynamic_obstacle(grid, start, end):
-    rows = len(grid)
-    r = random.randint(0, rows-1)
-    c = random.randint(0, rows-1)
-    node = grid[r][c]
-    if node != start and node != end and not node.is_wall():
-        node.make_wall()
+        curr.makePath()
+        curr = endParents.get(curr)
+        drawFunc()

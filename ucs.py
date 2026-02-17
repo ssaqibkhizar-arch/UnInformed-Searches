@@ -1,74 +1,52 @@
 import pygame
 import heapq
-import random
 
-def ucs_visualizer(draw_func, grid, start, end):
+def ucsVisualizer(drawFunc, grid, start, end):
     count = 0
-    open_set = []
-    heapq.heappush(open_set, (0, count, start))
+    openSet = []
+    # Priority Queue: (cost, entry_count, node)
+    heapq.heappush(openSet, (0, count, start))
     
-    cost_so_far = {node: float('inf') for row in grid for node in row}
-    cost_so_far[start] = 0
+    costSoFar = {node: float('inf') for row in grid for node in row}
+    costSoFar[start] = 0
     
     visited = {start}
 
-    directions = [
-        (0, -1), (1, -1), (1, 0), (1, 1), 
-        (0, 1), (-1, 1), (-1, 0), (-1, -1)
-    ]
-    
-    loop_count = 0
-
-    while open_set:
+    while openSet:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return False
 
-        current_cost, _, current = heapq.heappop(open_set)
+        # Pop the node with the lowest cumulative cost
+        currentCost, _, current = heapq.heappop(openSet)
 
         if current == end:
             return True
 
-        loop_count += 1
-        if loop_count % 15 == 0:
-            if random.random() < 0.02:
-                spawn_dynamic_obstacle(grid, start, end)
-
-        if current.is_wall():
+        if current.isWall():
             continue
 
         if current != start:
-            current.make_closed()
+            current.makeClosed()
 
-        row, col = current.row, current.col
-        rows = len(grid)
+        # Using the neighbors defined in main.py:
+        # (Up, Right, Bottom, Bottom-Right, Left, Top-Left)
+        for neighbor in current.neighbors:
+            # new_cost = current cumulative cost + weight of the neighbor node
+            newCost = costSoFar[current] + neighbor.weight
 
-        for dr, dc in directions:
-            r, c = row + dr, col + dc
-
-            if 0 <= r < rows and 0 <= c < rows:
-                neighbor = grid[r][c]
+            if not neighbor.isWall() and newCost < costSoFar[neighbor]:
+                costSoFar[neighbor] = newCost
+                neighbor.parent = current
                 
-                new_cost = cost_so_far[current] + neighbor.weight
+                count += 1
+                heapq.heappush(openSet, (newCost, count, neighbor))
+                
+                if neighbor != end:
+                    neighbor.makeOpen()
+                visited.add(neighbor)
 
-                if not neighbor.is_wall() and new_cost < cost_so_far[neighbor]:
-                    cost_so_far[neighbor] = new_cost
-                    neighbor.parent = current
-                    
-                    count += 1
-                    heapq.heappush(open_set, (new_cost, count, neighbor))
-                    neighbor.make_open()
-                    visited.add(neighbor)
-
-        draw_func()
+        drawFunc()
 
     return False
-
-def spawn_dynamic_obstacle(grid, start, end):
-    rows = len(grid)
-    r = random.randint(0, rows-1)
-    c = random.randint(0, rows-1)
-    node = grid[r][c]
-    if node != start and node != end and not node.is_wall():
-        node.make_wall()

@@ -1,18 +1,10 @@
 import pygame
-import random
 from collections import deque
 
-def bfs_visualizer(draw_func, grid, start, end):
+def bfsVisualizer(drawFunc, grid, start, end):
     queue = deque([start])
     visited = {start}
     
-    directions = [
-        (0, -1), (1, -1), (1, 0), (1, 1), 
-        (0, 1), (-1, 1), (-1, 0), (-1, -1)
-    ]
-    
-    loop_count = 0 
-
     while queue:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -24,41 +16,23 @@ def bfs_visualizer(draw_func, grid, start, end):
         if current == end:
             return True 
 
-        loop_count += 1
-        if loop_count % 10 == 0:
-            if random.random() < 0.02: 
-                spawn_dynamic_obstacle(grid, start, end)
-
-        if current.is_wall():
+        if current.isWall():
             continue
 
         if current != start:
-            current.make_closed() 
+            current.makeClosed() 
 
-        row, col = current.row, current.col
-        rows = len(grid)
-
-        for dr, dc in directions:
-            r, c = row + dr, col + dc
-
-            if 0 <= r < rows and 0 <= c < rows:
-                neighbor = grid[r][c]
+        # Using the neighbors list pre-populated in main.py
+        # This list strictly contains: Up, Right, Bottom, Bottom-Right, Left, Top-Left
+        for neighbor in current.neighbors:
+            if not neighbor.isWall() and neighbor not in visited:
+                visited.add(neighbor)
+                neighbor.parent = current
+                queue.append(neighbor)
                 
-                if not neighbor.is_wall() and neighbor not in visited:
-                    visited.add(neighbor)
-                    neighbor.parent = current
-                    queue.append(neighbor)
-                    neighbor.make_open() 
+                if neighbor != end:
+                    neighbor.makeOpen() 
 
-        draw_func()
+        drawFunc()
 
     return False
-
-def spawn_dynamic_obstacle(grid, start, end):
-    rows = len(grid)
-    r = random.randint(0, rows-1)
-    c = random.randint(0, rows-1)
-    node = grid[r][c]
-    
-    if node != start and node != end and not node.is_wall():
-        node.make_wall()

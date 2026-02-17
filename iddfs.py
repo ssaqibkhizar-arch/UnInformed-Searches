@@ -1,38 +1,32 @@
 import pygame
-import random
 
 RED = (255, 65, 54)
 GREEN = (46, 204, 64)
 BLUE = (0, 116, 217)
 
-def iddfs_visualizer(draw_func, grid, start, end):
-    max_depth = 50 
+def iddfsVisualizer(drawFunc, grid, start, end):
+    maxDepth = 50 
     
-    for depth_limit in range(max_depth):
-        reset_search_colors(grid)
+    for depthLimit in range(maxDepth):
+        resetSearchColors(grid)
         
-        if dls_with_limit(draw_func, grid, start, end, depth_limit):
+        # We pass the pre-calculated neighbors to ensure 6-direction movement
+        if dlsWithLimit(drawFunc, grid, start, end, depthLimit):
             return True
             
     return False
 
-def reset_search_colors(grid):
+def resetSearchColors(grid):
     for row in grid:
         for node in row:
             if node.color in {RED, GREEN, BLUE}:
                 node.reset() 
                 node.parent = None
 
-def dls_with_limit(draw_func, grid, start, end, limit):
+def dlsWithLimit(drawFunc, grid, start, end, limit):
+    # Stack stores tuples of (Node, CurrentDepth)
     stack = [(start, 0)]
     visited = set()
-    
-    directions = [
-        (0, -1), (1, 0), (0, 1), (1, 1), 
-        (-1, 0), (-1, -1), (1, -1), (-1, 1)
-    ]
-    
-    loop_count = 0
 
     while stack:
         for event in pygame.event.get():
@@ -45,12 +39,7 @@ def dls_with_limit(draw_func, grid, start, end, limit):
         if current == end:
             return True
 
-        loop_count += 1
-        if loop_count % 15 == 0:
-            if random.random() < 0.01:
-                spawn_dynamic_obstacle(grid, start, end)
-
-        if current.is_wall():
+        if current.isWall():
             continue
 
         if depth >= limit:
@@ -59,28 +48,15 @@ def dls_with_limit(draw_func, grid, start, end, limit):
         visited.add(current)
         
         if current != start:
-            current.make_closed() 
+            current.makeClosed() 
             
-        row, col = current.row, current.col
-        rows = len(grid)
+        # Using the neighbors defined in main.py (Up, Right, Bottom, Bottom-Right, Left, Top-Left)
+        for neighbor in current.neighbors:
+            if neighbor not in visited and not neighbor.isWall():
+                neighbor.parent = current
+                neighbor.makeOpen() 
+                stack.append((neighbor, depth + 1))
         
-        for dr, dc in directions:
-             r, c = row + dr, col + dc
-             if 0 <= r < rows and 0 <= c < rows:
-                 neighbor = grid[r][c]
-                 if not neighbor.is_wall() and neighbor not in visited:
-                     neighbor.parent = current
-                     neighbor.make_open() 
-                     stack.append((neighbor, depth + 1))
-        
-        draw_func()
+        drawFunc()
         
     return False
-
-def spawn_dynamic_obstacle(grid, start, end):
-    rows = len(grid)
-    r = random.randint(0, rows-1)
-    c = random.randint(0, rows-1)
-    node = grid[r][c]
-    if node != start and node != end and not node.is_wall():
-        node.make_wall()
